@@ -67,6 +67,7 @@ const server = http.createServer(async (req, res) => {
     const userId = req.url.split("/")[3];
     try {
       const body = await parse.json(req);
+      
       const { username, email } = body;
 
       await pool.query(
