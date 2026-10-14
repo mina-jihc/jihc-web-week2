@@ -148,7 +148,7 @@ const server = http.createServer(async (req, res) => {
       res.statusCode = 201;
       return res.end(
         JSON.stringify({
-          message: "Welcomee!",
+          message: "Welcome!",
           user: result.rows[0],
         }),
       );
