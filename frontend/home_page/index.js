@@ -54,45 +54,7 @@ async function korsetu() {
 
 korsetu();
 
-// async function deleteUser(userId) {
-//   if (!confirm("Are u sure about it?")) return;
 
-//   try {
-//     const res = await fetch(`http://localhost:5000/users/${userId}`, {
-//       method: "DELETE",
-//     });
-//     if (res.ok) {
-//       korsetu(); 
-//     } else {
-//       console.error("Error deleting user:", await res.text());
-//     }
-//   } catch (err) {
-//     console.error("Error deleting user:", err);
-//   }
-// }
-
-// async function edit(userId, currentUsername, currentEmail) {
-//   const newName = prompt("Enter new username:", currentUsername);
-//   const newEmail = prompt("Enter new email:", currentEmail);
-
-//   if (!newName || !newEmail) return;
-
-//   try {
-//     const res = await fetch(`http://localhost:5000/users/edit/${userId}`, {
-//       method: "PUT",
-//       headers: { "Content-Type": "application/json" },
-//       body: JSON.stringify({ username: newName, email: newEmail }),
-//     });
-
-//     if (res.ok) {
-//       korsetu();
-//     } else {
-//       console.error("Error editing user:", await res.text());
-//     }
-//   } catch (err) {
-//     console.error("Error editing user:", err);
-//   }
-// }
 
 async function submitForm(e) {
   if (e) e.preventDefault();

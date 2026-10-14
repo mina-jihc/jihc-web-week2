@@ -1,16 +1,30 @@
+import "dotenv/config";
 import http from "node:http";
 import parse from "co-body";
 import pg from "pg";
 import bcrypt from "bcrypt";
 
+interface User {
+  id: number;
+  username: string;
+  email: string;
+  password?: string;
+}
+
+interface AuthBody {
+  username?: string;
+  email?: string;
+  password?: string;
+}
+
 const { Pool } = pg;
 
 const pool = new Pool({
-  user: "postgres",
-  host: "localhost",
-  database: "postgres",
-  password: "MINAqwerty07",
-  port: 5432,
+  user: process.env.DB_USERNAME,
+  host: process.env.DB_HOST,
+  database: process.env.DB_DATABASE,
+  password: process.env.DB_PASSWORD,
+  port: Number(process.env.DB_PORT) || 5432,
 });
 
 const server = http.createServer(async (req, res) => {
@@ -28,8 +42,9 @@ const server = http.createServer(async (req, res) => {
   }
 
   if (req.url === "/users" && req.method === "GET") {
+    if (!req.url) return;
     try {
-      const result = await pool.query(
+      const result = await pool.query<User>(
         "SELECT id, username, email FROM users ORDER BY id DESC",
       );
       res.statusCode = 200;
@@ -41,8 +56,15 @@ const server = http.createServer(async (req, res) => {
     }
   }
 
-  if (req.url.startsWith("/users/") && req.method === "DELETE") {
-    const userId = req.url.split("/")[2];
+  if (req.url?.startsWith("/users/") && req.method === "DELETE") {
+    if (!req.url) return;
+    const userId = req.url?.split("/")[2];
+
+    if (!userId) {
+  res.statusCode = 400;
+  return res.end(JSON.stringify({ error: "User ID is missing" }));
+} 
+
     try {
       const result = await pool.query(
         "DELETE FROM users WHERE id = $1 RETURNING id",
@@ -63,8 +85,15 @@ const server = http.createServer(async (req, res) => {
     }
   }
 
-  if (req.url.startsWith("/users/edit/") && req.method === "PUT") {
-    const userId = req.url.split("/")[3];
+  if (req.url?.startsWith("/users/edit/") && req.method === "PUT") {
+    if (!req.url) return;
+    const userId = req.url?.split("/")[3];
+
+    if (!userId) {
+  res.statusCode = 400;
+  return res.end(JSON.stringify({ error: "User ID is missing" }));
+}
+
     try {
       const body = await parse.json(req);
       
@@ -85,8 +114,9 @@ const server = http.createServer(async (req, res) => {
   }
 
   if (req.url === "/register" && req.method === "POST") {
+    if (!req.url) return;
     try {
-      const body = await parse.json(req);
+      const body = await parse.json(req) as AuthBody;
       const { username, password, email } = body;
 
       if (!username || !password || !email) {
@@ -130,6 +160,7 @@ const server = http.createServer(async (req, res) => {
   }
 
   if (req.url === "/login" && req.method === "POST") {
+    if (!req.url) return;
     try {
       const body = await parse.json(req);
       const { email, password } = body;
@@ -149,16 +180,17 @@ const server = http.createServer(async (req, res) => {
         return res.end(JSON.stringify({ error: "Wrong email or password" }));
       }
 
-      const user = result.rows[0];
+      const user = result.rows[0] as User;
 
-      const isPasswordCorrect = await bcrypt.compare(password, user.password);
+      const isPasswordCorrect = await bcrypt.compare(password, user.password!);
 
       if (!isPasswordCorrect) {
         res.statusCode = 401;
         return res.end(JSON.stringify({ error: "Wrong email or password" }));
       }
 
-      delete user.password; 
+      const userResponse: Partial<User> = { ...user };
+      delete userResponse.password;
 
       res.statusCode = 200;
       return res.end(
